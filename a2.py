@@ -7,13 +7,12 @@ import sys
 import os
 import hashlib
 import json
+import time
+import datetime
 
 
 def check_dir(dirname):
     # python3 -O a2.py dir1 dir2, __debug__ will be false.
-    if __debug__:
-        return True
-         
     if not os.path.exists(dirname): 
         print(dirname + " does not exist.")
         return False
@@ -28,9 +27,6 @@ def check_dir(dirname):
 
 
 def check_syncfile_in_dir(dirname):
-    if __debug__:
-        return True
-
     if not os.path.exists(dirname + "/" + ".sync"): 
         print(dirname + "/" + ".sync file does not exist.")
         return False
@@ -41,7 +37,6 @@ def check_syncfile_in_dir(dirname):
 
 
 def gen_file_sha256(filename):
-    print("gen_file_sha256")
     f = open(filename, "rb")
     sh = hashlib.sha256()
     sh.update(f.read())
@@ -51,15 +46,39 @@ def gen_file_sha256(filename):
 
 
 
+def write_sha256_tofile(dirname, values):
+    syncfile = dirname + "/"+ ".sync"
+    d = {}
+    with open(syncfile, "w") as outfile:
+        # get history values first
+        print("file size = %s" % os.stat(syncfile).st_size)
+        if not os.stat(syncfile).st_size == 0:
+            d = json.load(outfile)
+            print(d)
+
+        '''
+        if not (filelist[i] in d):
+            print("Not exists!")
+            d[filelist[i]] = values
+        else:
+            print("Already exists!")
+        #     dd.setdefault(filelist[i], []).append([last_modified.isoformat(), value])
+        '''
+        #json.dump({filelist[i]:[last_modified.isoformat(), value]}, outfile)
+        json.dump(d, outfile)
+
+
+
 
 def gen_dir_sha256(dirname):
-    print("gen_file_sha256")
     filelist = os.listdir(dirname)
 
-    print("filelist = %s" % filelist)
-    print("length = %s" % len(filelist));
     if len(filelist) == 0:
         return
+
+    syncfile = dirname + "/"+ ".sync"
+    sha256_values = {}
+
 
     for i in range(0, len(filelist)):
         print("name = %s" % filelist[i])
@@ -69,16 +88,25 @@ def gen_dir_sha256(dirname):
                 pass
             else: 
                 print(filelist[i])
-                value = gen_file_sha256(dirname + "/"+ filelist[i])
+                # No time zone info now (pytz seems good, but it's third party)and time format does not seem good...
+                #print(time.tzname)
+ 
+                t = (os.path.getmtime(dirname + "/"+ filelist[i]))  
+                last_modified = datetime.datetime.fromtimestamp(t) 
+                #sha256_values[filelist[i]] = [last_modified, gen_file_sha256(dirname + "/"+ filelist[i])]
                 # write SHA256 value to .sync file
-                with open(dirname + "/"+ ".sync", "a") as outfile:
-                    json.dump(value, outfile)
+                print("sha256_values = %s" % sha256_values)
+                write_sha256_tofile(dirname, sha256_values)
 
-        # How to deal with this?
+         # How to deal with this?
         elif (os.path.isdir(dirname + "/" + filelist[i])):
             print("sub directory name: %s" % dirname + "/" + filelist[i])
         else:
             pass
+
+
+
+
 
 
 
@@ -94,18 +122,12 @@ def create_sync_file(dirname):
 
 
 
-
-
-
 def main():
 
     # check number of arguments
     if (len(sys.argv) < 3):
         print("Usage: ./sync dir1 dir2")
-        if __debug__:
-            pass
-        else:
-            return
+        return
 
     # check if directory exists
     if not check_dir(sys.argv[1]):
