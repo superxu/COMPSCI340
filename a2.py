@@ -50,6 +50,7 @@ def write_sha256_tofile(dirname, values):
     syncfile = dirname + "/"+ ".sync"
     d = {}
     print("file size = %s" % os.stat(syncfile).st_size)
+    print("values = %s" % values)
     if os.stat(syncfile).st_size == 0:
         with open(syncfile, "a+") as outfile:
             json.dump(values, outfile)
@@ -69,7 +70,7 @@ def write_sha256_tofile(dirname, values):
             #     dd.setdefault(filelist[i], []).append([last_modified.isoformat(), value])
             '''
             #json.dump({filelist[i]:[last_modified.isoformat(), value]}, outfile)
-            json.dump(d, outfile)
+            json.dump(values, outfile)
 
 
 
