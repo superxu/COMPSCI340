@@ -48,11 +48,13 @@ def gen_file_sha256(filename):
 
 def write_sha256_tofile(dirname, values):
     syncfile = dirname + "/"+ ".sync"
-    
+    d = {}
     print("file size = %s" % os.stat(syncfile).st_size)
-    if not os.stat(syncfile).st_size == 0:
-        d = {}
+    if os.stat(syncfile).st_size == 0:
+        with open(syncfile, "a+") as outfile:
+            json.dump(values, outfile)
 
+    else:
         with open(syncfile, "a+") as outfile:
         # get history values first
             d = json.load(outfile)
@@ -68,7 +70,6 @@ def write_sha256_tofile(dirname, values):
             '''
             #json.dump({filelist[i]:[last_modified.isoformat(), value]}, outfile)
             json.dump(d, outfile)
-
 
 
 
@@ -94,8 +95,9 @@ def gen_dir_sha256(dirname):
                 #print(time.tzname)
  
                 t = (os.path.getmtime(dirname + "/"+ filelist[i]))  
-                last_modified = datetime.datetime.fromtimestamp(t) 
-                sha256_values[filelist[i]] = [last_modified, gen_file_sha256(dirname + "/"+ filelist[i])]
+                last_modified = datetime.datetime.fromtimestamp(t)
+                print(last_modified)
+                sha256_values[filelist[i]] = [last_modified.isoformat(), gen_file_sha256(dirname + "/"+ filelist[i])]
                 # write SHA256 value to .sync file
                 print("sha256_values = %s" % sha256_values)
                 write_sha256_tofile(dirname, sha256_values)
