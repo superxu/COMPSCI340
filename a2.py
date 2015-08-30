@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # A2 for COMPSCI340/SOFTENG370 2015
-# Name: Shupeng Xu  UPI: sxu487   Student ID: 8260026
+# Author: Name: Shupeng Xu  UPI: sxu487   Student ID: 8260026
 
 
 import sys
@@ -45,8 +45,12 @@ def gen_file_sha256(filename):
     return SHA256_VALUE
 
 
-def compare_digest():
-    pass
+def compare_digest(old, new):
+    print(old == new)
+    if old == new:
+        return True
+
+    return False
 
 
 
@@ -56,7 +60,7 @@ def compare_mtime():
 
 
 
-def write_sha256_tofile(dirname, values):
+def write_sha256_tofile(dirname, new_values):
     filelist = os.listdir(dirname)
     syncfile = dirname + "/"+ ".sync"
     #filedata = {}
@@ -65,35 +69,36 @@ def write_sha256_tofile(dirname, values):
     # get history values first
     if not os.stat(syncfile).st_size == 0:
         fd_read =  open(syncfile, "r")
-        filedata = json.load(fd_read)
-        print("filedata = %s"  % filedata)
+        old_values = json.load(fd_read)
         fd_read.close()
 
 
     if os.stat(syncfile).st_size == 0:
         fd_write_first =  open(syncfile, "w")
-        json.dump(values, fd_write_first, indent=8)
+        json.dump(new_values, fd_write_first, indent=8)
         fd_write_first.close()
     else:
         fd_write =  open(syncfile, "w")
-        json.dump(values, fd_write, indent=8)
         for i in range(0, len(filelist)):
             if (os.path.isfile(dirname + "/" + filelist[i])):
                 # do not calculate SHA256 of .sync file
                 if filelist[i] == ".sync":   
                     pass
                 else: 
-                    print("filename = %s new value = %s" % (filelist[i], values[filelist[i]]))
-                    print("filename = %s old value = %s" % (filelist[i], filedata[filelist[i]]))
 
-        '''
-        if not (filelist[i] in d):
-            print("Not exists!")
-            d[filelist[i]] = values
-        else:
-            print("Already exists!")
-        '''
-        json.dump(values, fd_write, indent=8)
+                    if not (filelist[i] in old_values):
+                        print("Not exists!")
+                        old_values[filelist[i]] = new_values[filelist[i]]
+                    else:
+                        print("Already exists!")
+                        # compare 
+                        if not compare_digest(old_values[filelist[i]], new_values[filelist[i]]):
+                            print("filename = %s new value = %s" % (filelist[i], new_values[filelist[i]]))
+                            print("filename = %s old value = %s" % (filelist[i], old_values[filelist[i]]))
+                            old_values[filelist[i]].extend(new_values[filelist[i]]) 
+
+                    
+        json.dump(old_values, fd_write, indent=8)
         fd_write.close()
 
 
@@ -104,8 +109,11 @@ def gen_dir_sha256(dirname):
     if len(filelist) == 0:
         return
 
+    print(filelist)
+
     syncfile = dirname + "/"+ ".sync"
     sha256_values = {}
+
 
 
     for i in range(0, len(filelist)):
@@ -114,7 +122,7 @@ def gen_dir_sha256(dirname):
             if filelist[i] == ".sync":   
                 pass
             else: 
-                print(filelist[i])
+            
                 # No time zone info now (pytz seems good, but it's third party)and time format does not seem good...
                 #print(time.tzname)
  
@@ -124,17 +132,20 @@ def gen_dir_sha256(dirname):
                 valuelist = []
                 valuelist.append(last_modified.isoformat())
                 valuelist.append(gen_file_sha256(dirname + "/"+ filelist[i]))
-                sha256_values[filelist[i]] = valuelist
+
+              #  sha256_values[filelist[i]] = valuelist
+                sha256_values.setdefault(filelist[i], []).append(valuelist)
              
-                # write SHA256 value to .sync file
-                print("sha256_values = %s" % sha256_values)
-                write_sha256_tofile(dirname, sha256_values)
 
          # How to deal with this?
         elif (os.path.isdir(dirname + "/" + filelist[i])):
             print("sub directory name: %s" % dirname + "/" + filelist[i])
         else:
             pass
+
+    # write SHA256 value to .sync file
+    print("sha256_values = %s" % sha256_values)
+    write_sha256_tofile(dirname, sha256_values)
 
 
 
