@@ -121,8 +121,11 @@ def gen_dir_sha256(dirname):
                 t = (os.path.getmtime(dirname + "/"+ filelist[i]))  
                 last_modified = datetime.datetime.fromtimestamp(t)
                 #print(last_modified)
-                sha256_values[filelist[i]] = last_modified.isoformat()
-                #gen_file_sha256(dirname + "/"+ filelist[i])
+                valuelist = []
+                valuelist.append(last_modified.isoformat())
+                valuelist.append(gen_file_sha256(dirname + "/"+ filelist[i]))
+                sha256_values[filelist[i]] = valuelist
+             
                 # write SHA256 value to .sync file
                 print("sha256_values = %s" % sha256_values)
                 write_sha256_tofile(dirname, sha256_values)
