@@ -85,13 +85,13 @@ def write_sha256_tofile(dirname, new_values):
                 if filelist[i] == ".sync":   
                     pass
                 else: 
-
+                    # check if file(key) exisits
                     if not (filelist[i] in old_values):
                         print("Not exists!")
                         old_values[filelist[i]] = new_values[filelist[i]]
                     else:
                         print("Already exists!")
-                        # compare 
+                        # compare digest
                         if not compare_digest(old_values[filelist[i]][0][1], new_values[filelist[i]][0][1]):
                             print("new digest = %s" % new_values[filelist[i]][0][1])
                             print("old digest = %s" % old_values[filelist[i]][0][1])
