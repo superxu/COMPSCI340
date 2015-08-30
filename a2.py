@@ -97,8 +97,9 @@ def write_sha256_tofile(dirname, new_values):
                             print("old digest = %s" % old_values[filelist[i]][0][1])
 
                             old_values[filelist[i]].extend(new_values[filelist[i]]) 
-                            # some problems here, other keys will be reversed too...
+                            # it seems nothing wrong with reverse or sort. even I comment two lines below, the position of keys may still change
                             old_values[filelist[i]].reverse()
+                            old_values[filelist[i]].sort()
 
                     
         json.dump(old_values, fd_write, indent=8)
