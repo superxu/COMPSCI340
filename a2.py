@@ -62,41 +62,39 @@ def write_sha256_tofile(dirname, values):
     #filedata = {}
     print("file size = %s" % os.stat(syncfile).st_size)
     #print("values = %s" % values)
-    with open(syncfile, "a+") as outfile:
+    # get history values first
+    if not os.stat(syncfile).st_size == 0:
+        fd_read =  open(syncfile, "r")
+        filedata = json.load(fd_read)
+        print("filedata = %s"  % filedata)
+        fd_read.close()
 
-        if os.stat(syncfile).st_size == 0:
-            json.dump(values, outfile)
+
+    if os.stat(syncfile).st_size == 0:
+        fd_write_first =  open(syncfile, "w")
+        json.dump(values, fd_write_first, indent=8)
+        fd_write_first.close()
+    else:
+        fd_write =  open(syncfile, "w")
+        json.dump(values, fd_write, indent=8)
+        for i in range(0, len(filelist)):
+            if (os.path.isfile(dirname + "/" + filelist[i])):
+                # do not calculate SHA256 of .sync file
+                if filelist[i] == ".sync":   
+                    pass
+                else: 
+                    print("filename = %s new value = %s" % (filelist[i], values[filelist[i]]))
+                    print("filename = %s old value = %s" % (filelist[i], filedata[filelist[i]]))
+
+        '''
+        if not (filelist[i] in d):
+            print("Not exists!")
+            d[filelist[i]] = values
         else:
-            # get history values first
-            '''
-            for line in outfile:
-                filedata.append(json.loads(line))
-            '''
-            print("outfile = %s" % outfile)
-            filedata = json.load(outfile)
-            
-            print("filedata = %s"  % filedata)
-           
-
-            for i in range(0, len(filelist)):
-                if (os.path.isfile(dirname + "/" + filelist[i])):
-                    # do not calculate SHA256 of .sync file
-                    if filelist[i] == ".sync":   
-                        pass
-                    else: 
-                        print("filename = %s new value = %s" % (filelist[i], values[filelist[i]]))
-                       # print("filename = %s old value = %s" % (filelist[i], filedata[filelist[i]]))
-
-            '''
-            if not (filelist[i] in d):
-                print("Not exists!")
-                d[filelist[i]] = values
-            else:
-                print("Already exists!")
-            '''
-            #     dd.setdefault(filelist[i], []).append([last_modified.isoformat(), value])
-            #json.dump({filelist[i]:[last_modified.isoformat(), value]}, outfile)
-            json.dump(values, outfile, indent=8)
+            print("Already exists!")
+        '''
+        json.dump(values, fd_write, indent=8)
+        fd_write.close()
 
 
 
