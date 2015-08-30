@@ -59,19 +59,26 @@ def compare_mtime():
     pass
 
 
+def get_old_values(dirname):
+  
+    syncfile = dirname + "/"+ ".sync"
+    values = {}
+
+    if not os.stat(syncfile).st_size == 0:
+        fd_read =  open(syncfile, "r")
+        values = json.load(fd_read)
+        fd_read.close()
+
+    return values
+
 
 def write_sha256_tofile(dirname, new_values):
     filelist = os.listdir(dirname)
     syncfile = dirname + "/"+ ".sync"
-    #filedata = {}
-    print("file size = %s" % os.stat(syncfile).st_size)
-    #print("values = %s" % values)
-    # get history values first
-    if not os.stat(syncfile).st_size == 0:
-        fd_read =  open(syncfile, "r")
-        old_values = json.load(fd_read)
-        fd_read.close()
 
+    # get history values first
+    old_values = get_old_values(dirname)
+    print("old_values = %s" % old_values)
 
     if os.stat(syncfile).st_size == 0:
         fd_write_first =  open(syncfile, "w")
@@ -99,7 +106,7 @@ def write_sha256_tofile(dirname, new_values):
                             old_values[filelist[i]].extend(new_values[filelist[i]]) 
                             # it seems nothing wrong with reverse or sort. even I comment two lines below, the position of keys may still change
                             old_values[filelist[i]].reverse()
-                            old_values[filelist[i]].sort()
+                            #old_values[filelist[i]].sort()
 
                     
         json.dump(old_values, fd_write, indent=8)
