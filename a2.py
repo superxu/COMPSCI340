@@ -92,10 +92,12 @@ def write_sha256_tofile(dirname, new_values):
                     else:
                         print("Already exists!")
                         # compare 
-                        if not compare_digest(old_values[filelist[i]], new_values[filelist[i]]):
-                            print("filename = %s new value = %s" % (filelist[i], new_values[filelist[i]]))
-                            print("filename = %s old value = %s" % (filelist[i], old_values[filelist[i]]))
+                        if not compare_digest(old_values[filelist[i]][0][1], new_values[filelist[i]][0][1]):
+                            print("new digest = %s" % new_values[filelist[i]][0][1])
+                            print("old digest = %s" % old_values[filelist[i]][0][1])
+
                             old_values[filelist[i]].extend(new_values[filelist[i]]) 
+                            old_values[filelist[i]].reverse()
 
                     
         json.dump(old_values, fd_write, indent=8)
