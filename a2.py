@@ -45,21 +45,47 @@ def gen_file_sha256(filename):
     return SHA256_VALUE
 
 
+def compare_digest():
+    pass
+
+
+
+
+def compare_mtime():
+    pass
+
+
 
 def write_sha256_tofile(dirname, values):
+    filelist = os.listdir(dirname)
     syncfile = dirname + "/"+ ".sync"
-    d = {}
+    #filedata = {}
     print("file size = %s" % os.stat(syncfile).st_size)
-    print("values = %s" % values)
-    if os.stat(syncfile).st_size == 0:
-        with open(syncfile, "a+") as outfile:
-            json.dump(values, outfile)
+    #print("values = %s" % values)
+    with open(syncfile, "a+") as outfile:
 
-    else:
-        with open(syncfile, "a+") as outfile:
-        # get history values first
-            d = json.load(outfile)
-            print(d)
+        if os.stat(syncfile).st_size == 0:
+            json.dump(values, outfile)
+        else:
+            # get history values first
+            '''
+            for line in outfile:
+                filedata.append(json.loads(line))
+            '''
+            print("outfile = %s" % outfile)
+            filedata = json.load(outfile)
+            
+            print("filedata = %s"  % filedata)
+           
+
+            for i in range(0, len(filelist)):
+                if (os.path.isfile(dirname + "/" + filelist[i])):
+                    # do not calculate SHA256 of .sync file
+                    if filelist[i] == ".sync":   
+                        pass
+                    else: 
+                        print("filename = %s new value = %s" % (filelist[i], values[filelist[i]]))
+                       # print("filename = %s old value = %s" % (filelist[i], filedata[filelist[i]]))
 
             '''
             if not (filelist[i] in d):
@@ -67,10 +93,10 @@ def write_sha256_tofile(dirname, values):
                 d[filelist[i]] = values
             else:
                 print("Already exists!")
-            #     dd.setdefault(filelist[i], []).append([last_modified.isoformat(), value])
             '''
+            #     dd.setdefault(filelist[i], []).append([last_modified.isoformat(), value])
             #json.dump({filelist[i]:[last_modified.isoformat(), value]}, outfile)
-            json.dump(values, outfile)
+            json.dump(values, outfile, indent=8)
 
 
 
@@ -85,7 +111,6 @@ def gen_dir_sha256(dirname):
 
 
     for i in range(0, len(filelist)):
-        print("name = %s" % filelist[i])
         if (os.path.isfile(dirname + "/" + filelist[i])):
             # do not calculate SHA256 of .sync file
             if filelist[i] == ".sync":   
@@ -97,8 +122,9 @@ def gen_dir_sha256(dirname):
  
                 t = (os.path.getmtime(dirname + "/"+ filelist[i]))  
                 last_modified = datetime.datetime.fromtimestamp(t)
-                print(last_modified)
-                sha256_values[filelist[i]] = [last_modified.isoformat(), gen_file_sha256(dirname + "/"+ filelist[i])]
+                #print(last_modified)
+                sha256_values[filelist[i]] = last_modified.isoformat()
+                #gen_file_sha256(dirname + "/"+ filelist[i])
                 # write SHA256 value to .sync file
                 print("sha256_values = %s" % sha256_values)
                 write_sha256_tofile(dirname, sha256_values)
