@@ -91,12 +91,13 @@ def write_sha256_tofile(dirname, new_values):
                         old_values[filelist[i]] = new_values[filelist[i]]
                     else:
                         print("Already exists!")
-                        # compare digest
+                        # compare digest 
                         if not compare_digest(old_values[filelist[i]][0][1], new_values[filelist[i]][0][1]):
                             print("new digest = %s" % new_values[filelist[i]][0][1])
                             print("old digest = %s" % old_values[filelist[i]][0][1])
 
                             old_values[filelist[i]].extend(new_values[filelist[i]]) 
+                            # some problems here, other keys will be reversed too...
                             old_values[filelist[i]].reverse()
 
                     
