@@ -1,0 +1,2 @@
+The contents of file, base/dir1/a.txt:
+Not very exciting really.

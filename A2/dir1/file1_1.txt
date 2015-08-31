@@ -1,3 +1,0 @@
-The contents of file, base/dir1/file1_1.txt:
-Not very exciting really.
-New data written.fsfj

@@ -45,9 +45,9 @@ def gen_file_sha256(filename):
     return SHA256_VALUE
 
 
-def compare_digest(old, new):
-    print(old == new)
-    if old == new:
+def compare_digest(value1, value2):
+    print(value1 == value2)
+    if value1 == value2:
         return True
 
     return False
@@ -65,7 +65,7 @@ def check_file_deleted(old, new):
             if not (old[key][0][1] == "deleted"):
                 print("Filename: %s is deleted." % key)
                 # what's the modification time of a deleted file? Now?
-                # build delete information
+                # build deleted information
                 delete_info = []
                 deleted_time = time.strftime("%Y-%m-%d %H:%M:%S %z", time.localtime())
                 delete_msg = "deleted"
@@ -79,8 +79,7 @@ def check_file_deleted(old, new):
 
 
 
-def get_old_values(dirname):
-  
+def get_syncfile_content(dirname):
     syncfile = dirname + "/"+ ".sync"
     values = {}
 
@@ -98,7 +97,7 @@ def write_sha256_tofile(dirname, new_values):
     syncfile = dirname + "/"+ ".sync"
 
     # get history values first
-    old_values = get_old_values(dirname)
+    old_values = get_syncfile_content(dirname)
     print("old_values = %s" % old_values)
 
     if os.stat(syncfile).st_size == 0:
@@ -149,7 +148,6 @@ def gen_dir_sha256(dirname):
     sha256_values = {}
 
 
-
     for i in range(0, len(filelist)):
         if (os.path.isfile(dirname + "/" + filelist[i])):
             # do not calculate SHA256 of .sync file
@@ -192,6 +190,47 @@ def create_sync_file(dirname):
 
 
 
+def compare_syncfile(dir1, dir2):
+    syncfile1 = get_syncfile_content(dir1)
+    syncfile2 = get_syncfile_content(dir2)
+    print("syncfile1 = %s" % syncfile1)
+    print("syncfile2 = %s" % syncfile2)
+
+    for key1 in syncfile1.keys():
+        if  key1 in syncfile2.keys():
+            print("digest1 = %s" % syncfile1[key1][0][1])
+            print("digest2 = %s" % syncfile2[key1][0][1])
+            if compare_digest(syncfile1[key1][0][1], syncfile2[key1][0][1]):
+                if not compare_mtime(syncfile1[key1][0][0], syncfile2[key1][0][0]):
+                    # change mtime to the earlier mtime
+                    pass 
+
+            else:
+                pass
+
+        else:
+            file1 = dir1 + "/" + key1
+            file2 = dir2 + "/" + key1
+            os.system ("cp %s %s" % (file1, file2))
+
+
+
+    for key2 in syncfile2.keys():
+        if  key2 in syncfile1.keys():
+            print("digest1 = %s" % syncfile1[key2][0][1])
+            print("digest2 = %s" % syncfile2[key2][0][1])
+            if compare_digest(syncfile1[key2][0][1], syncfile2[key2][0][1]):
+                if not compare_mtime(syncfile1[key2][0][0], syncfile2[key2][0][0]):
+                    # change mtime to the earlier mtime
+                    pass 
+
+            else:
+                pass
+
+        else:
+            file1 = dir1 + "/" + key2
+            file2 = dir2 + "/" + key2
+            os.system ("cp %s %s" % (file2, file1))
 
 
 
@@ -213,7 +252,7 @@ def main():
     if not check_syncfile_in_dir(sys.argv[1]):
         # create .sync file
         create_sync_file(sys.argv[1])
-    
+   
     # generate SHA256 of files in the directory
     gen_dir_sha256(sys.argv[1])
 
@@ -221,10 +260,12 @@ def main():
     if not check_syncfile_in_dir(sys.argv[2]):
         # create .sync file
         create_sync_file(sys.argv[2])
-
     
     # generate SHA256 of files in the directory
     gen_dir_sha256(sys.argv[2])
+
+
+    compare_syncfile(sys.argv[1], sys.argv[2])
     
 
 
