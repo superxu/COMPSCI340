@@ -53,10 +53,30 @@ def compare_digest(old, new):
     return False
 
 
-
-
 def compare_mtime():
     pass
+
+
+# if a key is not in old_values, new file added
+# if a key is in old_values, but not in new_values, this file is deleted
+def check_file_deleted(old, new):
+    for key in old.keys():
+        if not (key in new.keys()):
+            if not (old[key][0][1] == "deleted"):
+                print("Filename: %s is deleted." % key)
+                # what's the modification time of a deleted file? Now?
+                # build delete information
+                delete_info = []
+                deleted_time = time.strftime("%Y-%m-%d %H:%M:%S %z", time.localtime())
+                delete_msg = "deleted"
+                delete_info.append(deleted_time)
+                delete_info.append(delete_msg)
+
+                old[key].extend([delete_info])
+                old[key].reverse()
+
+
+
 
 
 def get_old_values(dirname):
@@ -72,8 +92,9 @@ def get_old_values(dirname):
     return values
 
 
+
 def write_sha256_tofile(dirname, new_values):
-    filelist = os.listdir(dirname)
+    newfilelist = os.listdir(dirname)
     syncfile = dirname + "/"+ ".sync"
 
     # get history values first
@@ -86,27 +107,29 @@ def write_sha256_tofile(dirname, new_values):
         fd_write_first.close()
     else:
         fd_write =  open(syncfile, "w")
-        for i in range(0, len(filelist)):
-            if (os.path.isfile(dirname + "/" + filelist[i])):
-                # do not calculate SHA256 of .sync file
-                if filelist[i] == ".sync":   
-                    pass
-                else: 
-                    # check if file(key) exisits
-                    if not (filelist[i] in old_values):
-                        print("Not exists!")
-                        old_values[filelist[i]] = new_values[filelist[i]]
-                    else:
-                        print("Already exists!")
-                        # compare digest 
-                        if not compare_digest(old_values[filelist[i]][0][1], new_values[filelist[i]][0][1]):
-                            print("new digest = %s" % new_values[filelist[i]][0][1])
-                            print("old digest = %s" % old_values[filelist[i]][0][1])
+        for i in range(0, len(newfilelist)):
+            if newfilelist[i] == ".sync":   
+                pass
+            else: 
+                # check if file(key) exisits
+                if not (newfilelist[i] in old_values.keys()):
+                    # new file added
+                    print("Not exists!")
+                    old_values[newfilelist[i]] = new_values[newfilelist[i]]
+                else:
+                    print("Already exists!")
+                    # compare digest 
+                    if not compare_digest(old_values[newfilelist[i]][0][1], new_values[newfilelist[i]][0][1]):
+                        print("new digest = %s" % new_values[newfilelist[i]][0][1])
+                        print("old digest = %s" % old_values[newfilelist[i]][0][1])
 
-                            old_values[filelist[i]].extend(new_values[filelist[i]]) 
-                            # it seems nothing wrong with reverse or sort. even I comment two lines below, the position of keys may still change
-                            old_values[filelist[i]].reverse()
-                            #old_values[filelist[i]].sort()
+                        old_values[newfilelist[i]].extend(new_values[newfilelist[i]]) 
+                        # it seems nothing wrong with reverse or sort. even I comment two lines below, the position of keys may still change
+                        old_values[newfilelist[i]].reverse()
+
+
+        #check if files are deleted
+        check_file_deleted(old_values, new_values)
 
                     
         json.dump(old_values, fd_write, indent=8)
@@ -132,16 +155,12 @@ def gen_dir_sha256(dirname):
             # do not calculate SHA256 of .sync file
             if filelist[i] == ".sync":   
                 pass
-            else: 
-            
-                # No time zone info now (pytz seems good, but it's third party)and time format does not seem good...
-                #print(time.tzname)
- 
-                t = (os.path.getmtime(dirname + "/"+ filelist[i]))  
-                last_modified = datetime.datetime.fromtimestamp(t)
+            else:  
+                last_modified = time.strftime("%Y-%m-%d %H:%M:%S %z", time.localtime(os.path.getmtime(dirname + "/"+ filelist[i])))
+
                 #print(last_modified)
                 valuelist = []
-                valuelist.append(last_modified.isoformat())
+                valuelist.append(last_modified)
                 valuelist.append(gen_file_sha256(dirname + "/"+ filelist[i]))
 
               #  sha256_values[filelist[i]] = valuelist
