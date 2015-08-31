@@ -113,6 +113,7 @@ def p3():
 def p4():
     remove_all_files()
     os.mkdir("dir1")
+    os.mkdir("dir2")
     make_file("dir1/file1_1.txt", "Not very exciting really.")
     test_sync()
     print_file("dir1/.sync")
@@ -191,8 +192,9 @@ def p9():
 surround_test("1. This should print an error (or usage) message:", p1)
 surround_test("2. This should show both dir1 and dir2 as directories:", p2)
 surround_test("3. This should show sync file contents:", p3)
-'''
+
 surround_test("4. This should show two different sync files:", p4)
+'''
 surround_test("5. This should show two matching directories:", p5)
 surround_test("""6. This should show two matching directories
    with the file 'a.txt' 75 bytes long
