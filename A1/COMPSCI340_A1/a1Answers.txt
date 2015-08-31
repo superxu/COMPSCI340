@@ -1,0 +1,26 @@
+Name: Shupeng Xu  UPI: sxu487   Student ID: 8260026
+
+Note: I use Mac to edit this file, if it looks different on Windows. Please refer to a1Answers.jpg.
+
+How to run the program:
+1. just input python3 a1.py < testn.txt  where n = 1, 2, 3, 4, 5, 6. For example, python3 a1.py < test1.txt
+2. some undesirable things may affect the result, so please try to reset the terminal every time you finished one test.
+3. please try to execute the command when the terminal window is maximum. Otherwise, it may cause errors.
+
+
+
+Q1. If it is a LIFO stack-based dispatcher. It means that the dispatcher will choose P4 first.
+So the Gantt chart should be:
+
+|  P4 |    P3   |  P2 |    P1   |
+0     5        14    18        26
+
+In this case, the average waiting time is:
+
+(0 + 5 + 14 + 18)/4 = 37/4 = 9.25 milliseconds
+
+
+
+Q2. Because a real system has clock interrupt, system call, external interrupt, an operating system can decide during these points
+to kill/terminate a process. However, a Python tread implementation does not have these things, it means that it does not know when 
+is the proper time to kill/terminate a process safely. So we need to add these code to check the process' state.
