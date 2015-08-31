@@ -45,6 +45,7 @@ def gen_file_sha256(filename):
     return SHA256_VALUE
 
 
+
 def compare_digest(value1, value2):
     print(value1 == value2)
     if value1 == value2:
@@ -53,13 +54,25 @@ def compare_digest(value1, value2):
     return False
 
 
+
+'''
 def compare_mtime(t1, t2):
     print("compare_mtime")
     print("t1 = %s t2 = %s" % (t1, t2))
+    print(t1 < t2)
     latest = max((t1, t2))
     print(latest)
 
-    return False
+    return latest
+'''
+
+
+def compare_mtime(t1, t2):
+    print("compare_mtime")
+    print("t1 = %s t2 = %s" % (t1, t2))
+    return (t1 > t2)
+
+
 
 # if a key is not in old_values, new file added
 # if a key is in old_values, but not in new_values, this file is deleted
@@ -200,41 +213,54 @@ def compare_syncfile(dir1, dir2):
     print("syncfile1 = %s" % syncfile1)
     print("syncfile2 = %s" % syncfile2)
 
-    for key1 in syncfile1.keys():
-        if  key1 in syncfile2.keys():
-            print("digest1 = %s" % syncfile1[key1][0][1])
-            print("digest2 = %s" % syncfile2[key1][0][1])
-            if compare_digest(syncfile1[key1][0][1], syncfile2[key1][0][1]):
-                if not compare_mtime(syncfile1[key1][0][0], syncfile2[key1][0][0]):
-                    # change mtime to the earlier mtime
-                    pass 
+    for key in syncfile1.keys():
+        file1 = dir1 + "/" + key
+        file2 = dir2 + "/" + key
+        if  key in syncfile2.keys():
+            print("digest1 = %s" % syncfile1[key][0][1])
+            print("digest2 = %s" % syncfile2[key][0][1])
+            if compare_digest(syncfile1[key][0][1], syncfile2[key][0][1]):
+                if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
+                    # change mtime to the earlier mtime, how to change a file's modification time?
+                    stinfo = os.stat(file1)
+                    os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
+                    # update sync file entry
+                    
 
+            # file content is different
             else:
-                pass
-
+                if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
+                    os.system ("cp %s %s" % (file2, file1))
+                    stinfo = os.stat(file2)
+                    os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
 
         else:
-            file1 = dir1 + "/" + key1
-            file2 = dir2 + "/" + key1
             os.system ("cp %s %s" % (file1, file2))
 
 
 
-    for key2 in syncfile2.keys():
-        if  key2 in syncfile1.keys():
-            print("digest1 = %s" % syncfile1[key2][0][1])
-            print("digest2 = %s" % syncfile2[key2][0][1])
-            if compare_digest(syncfile1[key2][0][1], syncfile2[key2][0][1]):
-                if not compare_mtime(syncfile1[key2][0][0], syncfile2[key2][0][0]):
+    for key in syncfile2.keys():
+        file1 = dir1 + "/" + key
+        file2 = dir2 + "/" + key
+        if  key in syncfile1.keys():
+            print("digest1 = %s" % syncfile1[key][0][1])
+            print("digest2 = %s" % syncfile2[key][0][1])
+            if compare_digest(syncfile1[key][0][1], syncfile2[key][0][1]):
+                if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
                     # change mtime to the earlier mtime
-                    pass 
+                    stinfo = os.stat(file1)
+                    os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
+                    # update sync file entry
 
             else:
-                pass
+                #what if content is different but mtime is the same?
+                if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
+                    stinfo = os.stat(file2)
+                    os.system ("cp %s %s" % (file2, file1))
+                    os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
+
 
         else:
-            file1 = dir1 + "/" + key2
-            file2 = dir2 + "/" + key2
             os.system ("cp %s %s" % (file2, file1))
 
 
