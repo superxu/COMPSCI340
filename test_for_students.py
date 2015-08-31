@@ -43,10 +43,11 @@ def remove_files(files):
     for file in files:
         os.remove(file)
 
-def test_sync():
-    #os.system("./sync dir1 dir2")
-    # by Shupeng Xu
+def test_sync_usage():
     os.system("./sync dir1")
+
+def test_sync():
+    os.system("./sync dir1 dir2")
 
 
 def make_file(name, contents):
@@ -91,7 +92,7 @@ def setup_with_overlap_and_subdirectories():
 
 def p1():
     remove_all_files()
-    test_sync()
+    test_sync_usage()
 
 def p2():
     remove_all_files()
@@ -104,6 +105,7 @@ def p2():
 def p3():
     remove_all_files()
     os.mkdir("dir1")
+    os.mkdir("dir2")
     make_file("dir1/file1_1.txt", "Not very exciting really.")
     test_sync()
     print_file("dir1/.sync")
