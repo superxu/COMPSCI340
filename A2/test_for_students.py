@@ -196,10 +196,11 @@ surround_test("3. This should show sync file contents:", p3)
 surround_test("4. This should show two different sync files:", p4)
 
 surround_test("5. This should show two matching directories:", p5)
-'''
+
 surround_test("""6. This should show two matching directories
    with the file 'a.txt' 75 bytes long
    and the modification time > 1 second later:""", p6)
+'''
 surround_test("""7. This should show two pairs of matching directories
    with the second pair showing different sizes and modification times:""", p7)
 surround_test("""8. This should show the two directories.

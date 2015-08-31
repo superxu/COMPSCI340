@@ -53,9 +53,13 @@ def compare_digest(value1, value2):
     return False
 
 
-def compare_mtime():
-    pass
+def compare_mtime(t1, t2):
+    print("compare_mtime")
+    print("t1 = %s t2 = %s" % (t1, t2))
+    latest = max((t1, t2))
+    print(latest)
 
+    return False
 
 # if a key is not in old_values, new file added
 # if a key is in old_values, but not in new_values, this file is deleted
@@ -207,6 +211,7 @@ def compare_syncfile(dir1, dir2):
 
             else:
                 pass
+
 
         else:
             file1 = dir1 + "/" + key1
