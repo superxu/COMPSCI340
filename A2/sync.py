@@ -14,11 +14,11 @@ import datetime
 def check_dir(dirname):
     # python3 -O a2.py dir1 dir2, __debug__ will be false.
     if not os.path.exists(dirname): 
-        print(dirname + " does not exist.")
+        #print(dirname + " does not exist.")
         return False
     else:
         if not os.path.isdir(dirname):
-            print(dirname + " is not a directory.")
+            #print(dirname + " is not a directory.")
             return False
 
     return True
@@ -28,7 +28,7 @@ def check_dir(dirname):
 
 def check_syncfile_in_dir(dirname):
     if not os.path.exists(dirname + "/" + ".sync"): 
-        print(dirname + "/" + ".sync file does not exist.")
+        #print(dirname + "/" + ".sync file does not exist.")
         return False
 
     return True
@@ -47,7 +47,7 @@ def gen_file_sha256(filename):
 
 
 def compare_digest(value1, value2):
-    print(value1 == value2)
+    #print(value1 == value2)
     if value1 == value2:
         return True
 
@@ -68,8 +68,8 @@ def compare_mtime(t1, t2):
 
 
 def compare_mtime(t1, t2):
-    print("compare_mtime")
-    print("t1 = %s t2 = %s" % (t1, t2))
+    #print("compare_mtime")
+    #print("t1 = %s t2 = %s" % (t1, t2))
     return (t1 > t2)
 
 
@@ -116,7 +116,7 @@ def write_sha256_tofile(dirname, new_values):
 
     # get history values first
     old_values = get_syncfile_content(dirname)
-    print("old_values = %s" % old_values)
+    #print("old_values = %s" % old_values)
 
     if os.stat(syncfile).st_size == 0:
         fd_write_first =  open(syncfile, "w")
@@ -131,14 +131,14 @@ def write_sha256_tofile(dirname, new_values):
                 # check if file(key) exisits
                 if not (newfilelist[i] in old_values.keys()):
                     # new file added
-                    print("Not exists!")
+                    #print("Not exists!")
                     old_values[newfilelist[i]] = new_values[newfilelist[i]]
                 else:
-                    print("Already exists!")
+                    #print("Already exists!")
                     # compare digest 
                     if not compare_digest(old_values[newfilelist[i]][0][1], new_values[newfilelist[i]][0][1]):
-                        print("new digest = %s" % new_values[newfilelist[i]][0][1])
-                        print("old digest = %s" % old_values[newfilelist[i]][0][1])
+                        #print("new digest = %s" % new_values[newfilelist[i]][0][1])
+                        #print("old digest = %s" % old_values[newfilelist[i]][0][1])
 
                         old_values[newfilelist[i]].extend(new_values[newfilelist[i]]) 
                         # it seems nothing wrong with reverse or sort. even I comment reverse() below, the position/order of keys may still change
@@ -147,8 +147,6 @@ def write_sha256_tofile(dirname, new_values):
 
         #check if files are deleted
         check_file_deleted(old_values, new_values)
-
-                    
         json.dump(old_values, fd_write, indent=8)
         fd_write.close()
 
@@ -160,7 +158,7 @@ def update_syncfile(dirname, key,  new_value):
 
     # get history values first
     origin_values = get_syncfile_content(dirname)
-    print("origin_values = %s" % origin_values)
+    #print("origin_values = %s" % origin_values)
 
 
     if not (key in origin_values.keys()):
@@ -184,8 +182,6 @@ def gen_dir_sha256(dirname):
 
     if len(filelist) == 0:
         return
-
-    print(filelist)
 
     syncfile = dirname + "/"+ ".sync"
     sha256_values = {}
@@ -215,7 +211,7 @@ def gen_dir_sha256(dirname):
             pass
 
     # write SHA256 value to .sync file
-    print("sha256_values = %s" % sha256_values)
+    #print("sha256_values = %s" % sha256_values)
     write_sha256_tofile(dirname, sha256_values)
 
 
@@ -240,38 +236,36 @@ def compare_syncfile_impl(dir1, dir2, file_a, file_b):
         file1 = dir1 + "/" + key
         file2 = dir2 + "/" + key
         if  key in file_b.keys():
-            print("digest1 = %s" % file_a[key][0][1])
-            print("digest2 = %s" % file_b[key][0][1])
+            #print("digest1 = %s" % file_a[key][0][1])
+            #print("digest2 = %s" % file_b[key][0][1])
             if compare_digest(file_a[key][0][1], file_b[key][0][1]):
-                print("!!!!! Time1: %s !!!!!!" % (file_a[key][0][0] == file_b[key][0][0]))
+                #print("!!!!! Time1: %s !!!!!!" % (file_a[key][0][0] == file_b[key][0][0]))
                 if not (file_a[key][0][0] == file_b[key][0][0]):
                     if not compare_mtime(file_a[key][0][0], file_b[key][0][0]):
                         # change mtime to the earlier mtime, how to change a file's modification time?
                         stinfo = os.stat(file1)
                         os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
                         # update sync file entry
-                        print("add new key value: modification time = %s" % file_a[key][0][1])
+                        #print("add new key value: modification time = %s" % file_a[key][0][1])
                         update_syncfile(dir2, key, file_a[key][0])
 
 
             # file content is different
             else:
-                print("!!!!!! Time2: %s !!!!!!" % (file_a[key][0][0] == file_b[key][0][0]))
+                #print("!!!!!! Time2: %s !!!!!!" % (file_a[key][0][0] == file_b[key][0][0]))
                 if not (file_a[key][0][0] == file_b[key][0][0]):
                     if not compare_mtime(file_a[key][0][0], file_b[key][0][0]):
                         os.system ("cp %s %s" % (file2, file1))
                         stinfo = os.stat(file2)
                         os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
                         # update sync file entry
-                        print("add new key value = %s" % file_b[key][0])
+                        #print("add new key value = %s" % file_b[key][0])
                         update_syncfile(dir1, key, file_b[key][0])
 
                 # different time, same mtime
                 else:
-                    print("length of key =  %s" % len(file_b[key])) 
                     found_early_digest = False  
                     for i in range(len(file_b[key])):
-                        print("i = %s" % i)
                         if file_a[key][0][1] == file_b[key][i][1]:
                             found_early_digest = True
 
@@ -286,11 +280,6 @@ def compare_syncfile_impl(dir1, dir2, file_a, file_b):
 
         else:
             # if a file does not exist in another directory, I need to copy it.
-            # But after I copied it, do I need to change the modification time of copied file to be the same as the original one???
-            # I think so, because if you do not change the modification time as the original one, it means the copied one's mtime is older
-            # than original one, then it will sync again.....
-
-            print("File: %s is not in dir2" % file1)
             os.system ("cp %s %s" % (file1, file2))
             stinfo = os.stat(file1)
             os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
@@ -303,8 +292,8 @@ def compare_syncfile_impl(dir1, dir2, file_a, file_b):
 def compare_syncfile(dir1, dir2):
     syncfile1 = get_syncfile_content(dir1)
     syncfile2 = get_syncfile_content(dir2)
-    print("syncfile1 = %s" % syncfile1)
-    print("syncfile2 = %s" % syncfile2)
+    #print("syncfile1 = %s" % syncfile1)
+    #print("syncfile2 = %s" % syncfile2)
 
     compare_syncfile_impl(dir1, dir2, syncfile1, syncfile2)
 
