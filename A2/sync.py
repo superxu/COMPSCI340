@@ -264,7 +264,10 @@ def compare_syncfile_impl(dir1, dir2, file_a, file_b):
                         # update sync file entry
                         print("add new key value = %s" % file_b[key][0])
                         update_syncfile(dir1, key, file_b[key][0])
-                    
+
+                # different time, same mtime
+                else:
+                    pass   
 
         else:
             # if a file does not exist in another directory, I need to copy it.
@@ -306,12 +309,17 @@ def main():
         print("Usage: sync directory1 directory2")
         return
 
-    # check if directory exists
+    # check if directory exists and is directory
+    if ((not check_dir(sys.argv[1])) and (not check_dir(sys.argv[2]))):
+        print("Usage: sync directory1 directory2")
+        return
+
+
     if not check_dir(sys.argv[1]):
-        return
+        os.makedirs(sys.argv[1], exist_ok = True)
+    else:
+        os.makedirs(sys.argv[2], exist_ok = True)
     
-    if not check_dir(sys.argv[2]):
-        return
 
     # check if .sync file exists
     if not check_syncfile_in_dir(sys.argv[1]):

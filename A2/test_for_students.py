@@ -43,12 +43,8 @@ def remove_files(files):
     for file in files:
         os.remove(file)
 
-def test_sync_usage():
-    os.system("./sync dir1")
-
 def test_sync():
     os.system("./sync dir1 dir2")
-
 
 def make_file(name, contents):
     with open(name, "w") as file:
@@ -92,12 +88,11 @@ def setup_with_overlap_and_subdirectories():
 
 def p1():
     remove_all_files()
-    test_sync_usage()
+    test_sync()
 
 def p2():
     remove_all_files()
     os.mkdir("dir1")
-    os.mkdir("dir2")
     test_sync()
     directories = [f for f in os.listdir(".") if os.path.isdir(f)]
     print("\n".join(directories))
@@ -105,7 +100,6 @@ def p2():
 def p3():
     remove_all_files()
     os.mkdir("dir1")
-    os.mkdir("dir2")
     make_file("dir1/file1_1.txt", "Not very exciting really.")
     test_sync()
     print_file("dir1/.sync")
@@ -113,7 +107,6 @@ def p3():
 def p4():
     remove_all_files()
     os.mkdir("dir1")
-    os.mkdir("dir2")
     make_file("dir1/file1_1.txt", "Not very exciting really.")
     test_sync()
     print_file("dir1/.sync")
@@ -189,15 +182,11 @@ def p9():
     print_directory('dir2', 0)
 
 # Run different parts of this test program by un/commenting the bits you do/don't want.
-
 surround_test("1. This should print an error (or usage) message:", p1)
 surround_test("2. This should show both dir1 and dir2 as directories:", p2)
 surround_test("3. This should show sync file contents:", p3)
-
 surround_test("4. This should show two different sync files:", p4)
-
 surround_test("5. This should show two matching directories:", p5)
-
 surround_test("""6. This should show two matching directories
    with the file 'a.txt' 75 bytes long
    and the modification time > 1 second later:""", p6)
