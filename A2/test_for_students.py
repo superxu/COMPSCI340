@@ -193,10 +193,12 @@ surround_test("""6. This should show two matching directories
 
 surround_test("""7. This should show two pairs of matching directories
    with the second pair showing different sizes and modification times:""", p7)
+
 '''
 surround_test("""8. This should show the two directories.
    Then they should only contain c.txt.
    Then they should have a new version of b.txt:""", p8)
+
 surround_test("""9. This starts by showing the initial synchronized directories.
    file1_1.txt must be 81 bytes long:""", p9)
 '''

@@ -252,7 +252,13 @@ def compare_syncfile_impl(dir1, dir2, file_a, file_b):
 
             # file content is different
             else:
+                print("digest1 = %s" % file_a[key][0][1])
+                print("digest2 = %s" % file_b[key][0][1])
                 #print("!!!!!! Time2: %s !!!!!!" % (file_a[key][0][0] == file_b[key][0][0]))
+                if file_a[key][0][1] == "deleted":
+                    pass
+
+
                 if not (file_a[key][0][0] == file_b[key][0][0]):
                     if not compare_mtime(file_a[key][0][0], file_b[key][0][0]):
                         os.system ("cp %s %s" % (file2, file1))
@@ -262,19 +268,20 @@ def compare_syncfile_impl(dir1, dir2, file_a, file_b):
                         #print("add new key value = %s" % file_b[key][0])
                         update_syncfile(dir1, key, file_b[key][0])
 
-                # different time, same mtime
+                # different content, same mtime
                 else:
                     found_early_digest = False  
                     for i in range(len(file_b[key])):
                         if file_a[key][0][1] == file_b[key][i][1]:
                             found_early_digest = True
 
-                    if found_early_digest == False:
-                        os.system ("cp %s %s" % (file1, file2))
-                        stinfo = os.stat(file1)
-                        os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
+                    
+                    if found_early_digest == True:
+                        os.system ("cp %s %s" % (file2, file1))
+                        stinfo = os.stat(file2)
+                        os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
                         # update sync file entry
-                        update_syncfile(dir2, key, file_a[key][0])
+                        update_syncfile(dir1, key, file_b[key][0])
 
 
 
