@@ -84,6 +84,7 @@ def check_file_deleted(old, new):
                 # what's the modification time of a deleted file? Now?
                 # build deleted information
                 delete_info = []
+                # you do not know when the file is deleted, so just use current time.
                 deleted_time = time.strftime("%Y-%m-%d %H:%M:%S %z", time.localtime())
                 delete_msg = "deleted"
                 delete_info.append(deleted_time)
@@ -267,7 +268,21 @@ def compare_syncfile_impl(dir1, dir2, file_a, file_b):
 
                 # different time, same mtime
                 else:
-                    pass   
+                    print("length of key =  %s" % len(file_b[key])) 
+                    found_early_digest = False  
+                    for i in range(len(file_b[key])):
+                        print("i = %s" % i)
+                        if file_a[key][0][1] == file_b[key][i][1]:
+                            found_early_digest = True
+
+                    if found_early_digest == False:
+                        os.system ("cp %s %s" % (file1, file2))
+                        stinfo = os.stat(file1)
+                        os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
+                        # update sync file entry
+                        update_syncfile(dir2, key, file_a[key][0])
+
+
 
         else:
             # if a file does not exist in another directory, I need to copy it.
