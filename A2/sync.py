@@ -172,9 +172,7 @@ def update_syncfile(dirname, key,  new_value):
         fd_write =  open(syncfile, "w")
         origin_values[key].extend([new_value]) 
         # it seems nothing wrong with reverse or sort. even I comment reverse() below, the position/order of keys may still change
-        origin_values[key].reverse()
-
-                    
+        origin_values[key].reverse()     
         json.dump(origin_values, fd_write, indent=8)
         fd_write.close()
 
@@ -234,41 +232,38 @@ def create_sync_file(dirname):
 
 
 
-def compare_syncfile(dir1, dir2):
-    syncfile1 = get_syncfile_content(dir1)
-    syncfile2 = get_syncfile_content(dir2)
-    print("syncfile1 = %s" % syncfile1)
-    print("syncfile2 = %s" % syncfile2)
 
-    for key in syncfile1.keys():
+def compare_syncfile_impl(dir1, dir2, file_a, file_b):
+
+    for key in file_a.keys():
         file1 = dir1 + "/" + key
         file2 = dir2 + "/" + key
-        if  key in syncfile2.keys():
-            print("digest1 = %s" % syncfile1[key][0][1])
-            print("digest2 = %s" % syncfile2[key][0][1])
-            if compare_digest(syncfile1[key][0][1], syncfile2[key][0][1]):
-                print("!!!!! Time1: %s !!!!!!" % (syncfile1[key][0][0] == syncfile2[key][0][0]))
-                if not (syncfile1[key][0][0] == syncfile2[key][0][0]):
-                    if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
+        if  key in file_b.keys():
+            print("digest1 = %s" % file_a[key][0][1])
+            print("digest2 = %s" % file_b[key][0][1])
+            if compare_digest(file_a[key][0][1], file_b[key][0][1]):
+                print("!!!!! Time1: %s !!!!!!" % (file_a[key][0][0] == file_b[key][0][0]))
+                if not (file_a[key][0][0] == file_b[key][0][0]):
+                    if not compare_mtime(file_a[key][0][0], file_b[key][0][0]):
                         # change mtime to the earlier mtime, how to change a file's modification time?
                         stinfo = os.stat(file1)
                         os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
                         # update sync file entry
-                        print("add new key value: modification time = %s" % syncfile1[key][0][1])
-                        update_syncfile(dir2, key, syncfile1[key][0])
+                        print("add new key value: modification time = %s" % file_a[key][0][1])
+                        update_syncfile(dir2, key, file_a[key][0])
 
 
             # file content is different
             else:
-                print("!!!!!! Time2: %s !!!!!!" % (syncfile1[key][0][0] == syncfile2[key][0][0]))
-                if not (syncfile1[key][0][0] == syncfile2[key][0][0]):
-                    if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
+                print("!!!!!! Time2: %s !!!!!!" % (file_a[key][0][0] == file_b[key][0][0]))
+                if not (file_a[key][0][0] == file_b[key][0][0]):
+                    if not compare_mtime(file_a[key][0][0], file_b[key][0][0]):
                         os.system ("cp %s %s" % (file2, file1))
                         stinfo = os.stat(file2)
                         os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
                         # update sync file entry
-                        print("add new key value = %s" % syncfile2[key][0])
-                        update_syncfile(dir1, key, syncfile2[key][0])
+                        print("add new key value = %s" % file_b[key][0])
+                        update_syncfile(dir1, key, file_b[key][0])
                     
 
         else:
@@ -282,50 +277,24 @@ def compare_syncfile(dir1, dir2):
             stinfo = os.stat(file1)
             os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
             # update sync file entry
-            update_syncfile(dir2, key, syncfile1[key][0])
+            update_syncfile(dir2, key, file_a[key][0])
+
+
+
+
+def compare_syncfile(dir1, dir2):
+    syncfile1 = get_syncfile_content(dir1)
+    syncfile2 = get_syncfile_content(dir2)
+    print("syncfile1 = %s" % syncfile1)
+    print("syncfile2 = %s" % syncfile2)
+
+    compare_syncfile_impl(dir1, dir2, syncfile1, syncfile2)
 
 
     syncfile1 = get_syncfile_content(dir1)
     syncfile2 = get_syncfile_content(dir2)
 
-
-    for key in syncfile2.keys():
-        file1 = dir1 + "/" + key
-        file2 = dir2 + "/" + key
-        if  key in syncfile1.keys():
-            print("digest1 = %s" % syncfile1[key][0][1])
-            print("digest2 = %s" % syncfile2[key][0][1])
-            if compare_digest(syncfile1[key][0][1], syncfile2[key][0][1]):
-                print("!!!!!! Time3: %s !!!!!!" % (syncfile1[key][0][0] == syncfile2[key][0][0]))
-                if not (syncfile1[key][0][0] == syncfile2[key][0][0]):
-                    if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
-                        # change mtime to the earlier mtime
-                        stinfo = os.stat(file1)
-                        os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
-                        # update sync file entry
-                        print("add new key value: modification time = %s" % syncfile1[key][0][1])
-                        update_syncfile(dir2, key, syncfile1[key][0])
-
-            else:
-                #what if content is different but mtime is the same?
-                print("!!!!! Time4: %s !!!!!!" % (syncfile1[key][0][0] == syncfile2[key][0][0]))
-                if not (syncfile1[key][0][0] == syncfile2[key][0][0]):
-                    if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
-                        stinfo = os.stat(file2)
-                        os.system ("cp %s %s" % (file2, file1))
-                        os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
-                         # update sync file entry
-                        print("add new key value = %s" % syncfile2[key][0])
-                        update_syncfile(dir1, key, syncfile2[key][0])
-
-
-        else:
-            print("File: %s is not in dir1" % file2)
-            os.system ("cp %s %s" % (file2, file1))
-            stinfo = os.stat(file2)
-            os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
-            # update sync file entry
-            update_syncfile(dir1, key, syncfile2[key][0])
+    compare_syncfile_impl(dir2, dir1, syncfile2, syncfile1)
 
 
 
