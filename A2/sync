@@ -140,7 +140,7 @@ def write_sha256_tofile(dirname, new_values):
                         print("old digest = %s" % old_values[newfilelist[i]][0][1])
 
                         old_values[newfilelist[i]].extend(new_values[newfilelist[i]]) 
-                        # it seems nothing wrong with reverse or sort. even I comment two lines below, the position of keys may still change
+                        # it seems nothing wrong with reverse or sort. even I comment reverse() below, the position/order of keys may still change
                         old_values[newfilelist[i]].reverse()
 
 
@@ -149,6 +149,33 @@ def write_sha256_tofile(dirname, new_values):
 
                     
         json.dump(old_values, fd_write, indent=8)
+        fd_write.close()
+
+
+# add new key/value pair
+# find exisited key and extend it
+def update_syncfile(dirname, key,  new_value):
+    syncfile = dirname + "/"+ ".sync"
+
+    # get history values first
+    origin_values = get_syncfile_content(dirname)
+    print("origin_values = %s" % origin_values)
+
+
+    if not (key in origin_values.keys()):
+        fd_write_first =  open(syncfile, "w")
+        origin_values[key] = [new_value]
+        json.dump(origin_values, fd_write_first, indent=8)
+        fd_write_first.close()
+
+    else:
+        fd_write =  open(syncfile, "w")
+        origin_values[key].extend([new_value]) 
+        # it seems nothing wrong with reverse or sort. even I comment reverse() below, the position/order of keys may still change
+        origin_values[key].reverse()
+
+                    
+        json.dump(origin_values, fd_write, indent=8)
         fd_write.close()
 
 
@@ -220,23 +247,46 @@ def compare_syncfile(dir1, dir2):
             print("digest1 = %s" % syncfile1[key][0][1])
             print("digest2 = %s" % syncfile2[key][0][1])
             if compare_digest(syncfile1[key][0][1], syncfile2[key][0][1]):
-                if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
-                    # change mtime to the earlier mtime, how to change a file's modification time?
-                    stinfo = os.stat(file1)
-                    os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
-                    # update sync file entry
-                    
+                print("!!!!! Time1: %s !!!!!!" % (syncfile1[key][0][0] == syncfile2[key][0][0]))
+                if not (syncfile1[key][0][0] == syncfile2[key][0][0]):
+                    if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
+                        # change mtime to the earlier mtime, how to change a file's modification time?
+                        stinfo = os.stat(file1)
+                        os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
+                        # update sync file entry
+                        print("add new key value: modification time = %s" % syncfile1[key][0][1])
+                        update_syncfile(dir2, key, syncfile1[key][0])
+
 
             # file content is different
             else:
-                if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
-                    os.system ("cp %s %s" % (file2, file1))
-                    stinfo = os.stat(file2)
-                    os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
+                print("!!!!!! Time2: %s !!!!!!" % (syncfile1[key][0][0] == syncfile2[key][0][0]))
+                if not (syncfile1[key][0][0] == syncfile2[key][0][0]):
+                    if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
+                        os.system ("cp %s %s" % (file2, file1))
+                        stinfo = os.stat(file2)
+                        os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
+                        # update sync file entry
+                        print("add new key value = %s" % syncfile2[key][0])
+                        update_syncfile(dir1, key, syncfile2[key][0])
+                    
 
         else:
-            os.system ("cp %s %s" % (file1, file2))
+            # if a file does not exist in another directory, I need to copy it.
+            # But after I copied it, do I need to change the modification time of copied file to be the same as the original one???
+            # I think so, because if you do not change the modification time as the original one, it means the copied one's mtime is older
+            # than original one, then it will sync again.....
 
+            print("File: %s is not in dir2" % file1)
+            os.system ("cp %s %s" % (file1, file2))
+            stinfo = os.stat(file1)
+            os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
+            # update sync file entry
+            update_syncfile(dir2, key, syncfile1[key][0])
+
+
+    syncfile1 = get_syncfile_content(dir1)
+    syncfile2 = get_syncfile_content(dir2)
 
 
     for key in syncfile2.keys():
@@ -246,22 +296,37 @@ def compare_syncfile(dir1, dir2):
             print("digest1 = %s" % syncfile1[key][0][1])
             print("digest2 = %s" % syncfile2[key][0][1])
             if compare_digest(syncfile1[key][0][1], syncfile2[key][0][1]):
-                if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
-                    # change mtime to the earlier mtime
-                    stinfo = os.stat(file1)
-                    os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
-                    # update sync file entry
+                print("!!!!!! Time3: %s !!!!!!" % (syncfile1[key][0][0] == syncfile2[key][0][0]))
+                if not (syncfile1[key][0][0] == syncfile2[key][0][0]):
+                    if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
+                        # change mtime to the earlier mtime
+                        stinfo = os.stat(file1)
+                        os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
+                        # update sync file entry
+                        print("add new key value: modification time = %s" % syncfile1[key][0][1])
+                        update_syncfile(dir2, key, syncfile1[key][0])
 
             else:
                 #what if content is different but mtime is the same?
-                if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
-                    stinfo = os.stat(file2)
-                    os.system ("cp %s %s" % (file2, file1))
-                    os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
+                print("!!!!! Time4: %s !!!!!!" % (syncfile1[key][0][0] == syncfile2[key][0][0]))
+                if not (syncfile1[key][0][0] == syncfile2[key][0][0]):
+                    if not compare_mtime(syncfile1[key][0][0], syncfile2[key][0][0]):
+                        stinfo = os.stat(file2)
+                        os.system ("cp %s %s" % (file2, file1))
+                        os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
+                         # update sync file entry
+                        print("add new key value = %s" % syncfile2[key][0])
+                        update_syncfile(dir1, key, syncfile2[key][0])
 
 
         else:
+            print("File: %s is not in dir1" % file2)
             os.system ("cp %s %s" % (file2, file1))
+            stinfo = os.stat(file2)
+            os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
+            # update sync file entry
+            update_syncfile(dir1, key, syncfile2[key][0])
+
 
 
 
