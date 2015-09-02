@@ -44,8 +44,6 @@ def compare_digest(value1, value2):
     return False
 
 
-
-
 def same_mtimes(t1, t2):
     return (t1 == t2)
 
@@ -75,8 +73,6 @@ def check_file_deleted(old, new):
 
                 old[key].extend([delete_info])
                 old[key].reverse()
-
-
 
 
 
@@ -142,6 +138,9 @@ def write_sha256_tofile(dirname, new_values):
         fd_write.close()
 
 
+
+
+
 # add new key/value pair
 # find exisited key and extend it
 def update_syncfile(dirname, key,  new_value):
@@ -165,6 +164,7 @@ def update_syncfile(dirname, key,  new_value):
         origin_values[key].reverse()     
         json.dump(origin_values, fd_write, indent=8)
         fd_write.close()
+
 
 
 def gen_file_sha256(filename):
@@ -218,10 +218,6 @@ def gen_dir_sha256(dirname):
     # write SHA256 value to .sync file
     #print("sha256_values = %s" % sha256_values)
     write_sha256_tofile(dirname, sha256_values)
-
-
-
-
 
 
 
