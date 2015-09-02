@@ -61,11 +61,10 @@ def compare_mtime(t1, t2):
 # if a key is not in old_values, new file added
 # if a key is in old_values, but not in new_values, this file is deleted
 def check_file_deleted(old, new):
-
     for key in old.keys():
         if not (key in new.keys()):
             if not (old[key][0][1] == "deleted"):
-                print("Filename: %s is deleted." % key)
+                #print("Filename: %s is deleted." % key)
                 # build deleted information
                 delete_info = []
                 # you do not know when the file is deleted, so just use current time.
@@ -96,10 +95,8 @@ def get_syncfile_content(dirname):
 
 def is_empty(any_structure):
     if any_structure:
-        print('Structure is not empty.')
         return False
     else:
-        print('Structure is empty.')
         return True
 
 
@@ -112,15 +109,11 @@ def write_sha256_tofile(dirname, new_values):
     #print("old_values = %s" % old_values)
 
     if (os.stat(syncfile).st_size == 0) or (is_empty(old_values)):
-        print("write_sha256_tofile old_values = %s" % old_values )
         fd_write_first =  open(syncfile, "w")
-        print("write new values = %s"  % new_values)
         json.dump(new_values, fd_write_first, indent=8)
         fd_write_first.close()
-        print("write new values to sync file: %s done." % syncfile)
     else:
         fd_write =  open(syncfile, "w")
-        print("newfilelist = %s" % newfilelist)
         for i in range(0, len(newfilelist)):
             if newfilelist[i] == ".sync":   
                 pass
@@ -145,10 +138,8 @@ def write_sha256_tofile(dirname, new_values):
 
         #check if files are deleted
         check_file_deleted(old_values, new_values)
-        print("write old values = %s"  % old_values)
         json.dump(old_values, fd_write, indent=8)
         fd_write.close()
-        print("write old values to sync file: %s done." % syncfile)
 
 
 # add new key/value pair
@@ -188,7 +179,7 @@ def gen_file_sha256(filename):
 
 def gen_dir_sha256(dirname):
     filelist = os.listdir(dirname)
-    print("filelist = %s" % filelist)
+    #print("filelist = %s" % filelist)
 
     if len(filelist) == 0:
         return
@@ -217,14 +208,15 @@ def gen_dir_sha256(dirname):
          # How to deal with this?
         elif (os.path.isdir(dirname + "/" + filelist[i])):
             subdir = dirname + "/" + filelist[i]
-            print("sub directory name: %s" % subdir)
+            #print("sub directory name: %s" % subdir)
+            # recursively generate digests
             gen_dir_sha256(subdir)
             
         else:
             pass
 
     # write SHA256 value to .sync file
-    print("sha256_values = %s" % sha256_values)
+    #print("sha256_values = %s" % sha256_values)
     write_sha256_tofile(dirname, sha256_values)
 
 
@@ -232,13 +224,6 @@ def gen_dir_sha256(dirname):
 
 
 
-
-
-def create_syncfile(dirname):
-    pre_position = os.popen("pwd").read().rstrip('\n')
-    os.chdir(dirname)
-    os.system("touch .sync")
-    os.chdir(pre_position)
 
 
 
@@ -396,22 +381,18 @@ def main():
 
     # check if .sync file exists
     if not check_syncfile_in_dir(sys.argv[1]):
-        # create .sync file
-        #create_syncfile(sys.argv[1])
+        # create .sync files
         create_syncfiles(sys.argv[1])
    
     # generate SHA256 of files in the directory
-    print("begin to generate digest. %s" % sys.argv[1])
     gen_dir_sha256(sys.argv[1])
 
 
     if not check_syncfile_in_dir(sys.argv[2]):
-        # create .sync file
-        #create_syncfile(sys.argv[2])
+        # create .sync files
         create_syncfiles(sys.argv[2])
     
     # generate SHA256 of files in the directory
-    print("begin to generate digest. %s" % sys.argv[2])
     gen_dir_sha256(sys.argv[2])
 
 
