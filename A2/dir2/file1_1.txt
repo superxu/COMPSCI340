@@ -1,0 +1,2 @@
+The contents of file, base/dir2/file1_1.txt:
+This should replace the one in dir1.

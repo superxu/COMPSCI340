@@ -229,6 +229,33 @@ def create_sync_file(dirname):
 
 
 
+def list_sub_directories():
+    for dirname, dirnames, filenames in os.walk('.'):
+        # print path to all subdirectories first.
+        for subdirname in dirnames:
+            print(os.path.join(dirname, subdirname))
+
+        # print path to all filenames.
+        for filename in filenames:
+            print(os.path.join(dirname, filename))
+
+        # Advanced usage:
+        # editing the 'dirnames' list will stop os.walk() from recursing into there.
+        if '.git' in dirnames:
+            # don't go into any .git directories.
+            dirnames.remove('.git')
+
+
+def create_sync_file_including_subdir(dirname):
+    pre_position = os.popen("pwd").read().rstrip('\n')
+    os.chdir(dirname)
+    os.system("touch .sync")
+    # check if there are sub directories.
+    list_sub_directories()
+    os.chdir(pre_position)
+
+
+
 
 def compare_syncfile_impl(dir1, dir2, file_a, file_b):
 
@@ -355,7 +382,8 @@ def main():
     # check if .sync file exists
     if not check_syncfile_in_dir(sys.argv[1]):
         # create .sync file
-        create_sync_file(sys.argv[1])
+        #create_sync_file(sys.argv[1])
+        create_sync_file_including_subdir(sys.argv[1])
    
     # generate SHA256 of files in the directory
     gen_dir_sha256(sys.argv[1])
@@ -363,7 +391,8 @@ def main():
 
     if not check_syncfile_in_dir(sys.argv[2]):
         # create .sync file
-        create_sync_file(sys.argv[2])
+        #create_sync_file(sys.argv[2])
+        create_sync_file_including_subdir(sys.argv[2])
     
     # generate SHA256 of files in the directory
     gen_dir_sha256(sys.argv[2])

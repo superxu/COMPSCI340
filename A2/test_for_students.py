@@ -180,6 +180,7 @@ def p9():
     print_directory('dir1', 0)
     print()
     print_directory('dir2', 0)
+    
 
 # Run different parts of this test program by un/commenting the bits you do/don't want.
 surround_test("1. This should print an error (or usage) message:", p1)
@@ -198,7 +199,7 @@ surround_test("""7. This should show two pairs of matching directories
 surround_test("""8. This should show the two directories.
    Then they should only contain c.txt.
    Then they should have a new version of b.txt:""", p8)
-'''
+
 surround_test("""9. This starts by showing the initial synchronized directories.
    file1_1.txt must be 81 bytes long:""", p9)
-'''
+
