@@ -1,2 +1,0 @@
-The contents of file, base/dir2/dir2_1/file2_1_1.txt:
-Also, not very exciting.
