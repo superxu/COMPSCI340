@@ -166,6 +166,7 @@ def p9():
     print_directory('dir1', 0)
     print()
     print_directory('dir2', 0)
+    '''
     print("\n --- delete all files ---\n")
     remove_files(["dir1/file1_1.txt", "dir1/file1_2.txt", "dir1/dir1_1/dir1_1_1/file1_1_1_1.txt",
         "dir1/dir1_2/file1_2_1.txt", "dir2/file2_1.txt", "dir2/dir2_1/file2_1_1.txt"])
@@ -180,6 +181,7 @@ def p9():
     print_directory('dir1', 0)
     print()
     print_directory('dir2', 0)
+    '''
     
 
 # Run different parts of this test program by un/commenting the bits you do/don't want.
