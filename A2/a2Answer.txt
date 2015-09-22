@@ -1,0 +1,26 @@
+# A2 for COMPSCI340/SOFTENG370 2015
+# Author: Name: Shupeng Xu  UPI: sxu487   Student ID: 8260026
+
+
+Q1. How well would this synchronisation implementation cope with a large number of files? Explain your answer.
+
+
+Answer:  Not well, because it needs a lot of memory to read the whole content of .sync file into memory before you update the .sync file. That's also because the solution needs to keeps the history data(signature and modification time). The .sync file can grow to a very large file (too many entries in it) if you have a large number of files.
+
+
+
+Q2. Several of the assumptions cannot be enforced. We rely on the user being careful. This is partly because of the limitations of most current file systems. Take two of the assumptions above (you may also specify other assumptions that I haven't explicitly mentioned), and describe ways in which the assumptions can be made unnecessary. Your solutions should make the synchronization process safer or more reliable. At least one of the solutions should mention some extra facility that must be added to the file system to make the solution possible.
+
+Assumption 1: If two files have the same signature, they are the same version. (In reality this may not be the case because
+the file could have been altered and then changed back to its original state.)
+
+I think one possible way to make sure this is to add an attribute, say version number to the file system. The version number only can be added or increased so that every time a file is changed, it's version number is increased by one. Therefore, if two files have the same signature and the same version number, we consider they are the same version.
+
+
+Another way is using a service similar to Distributed Link Tracking Client Service(running in background), which means that you keep a log of changes made to files. By doing this, you can know that when a file is changed, or even deleted.
+
+
+Assumption 2: No ordinary files in one directory will match the names of directories in the other directory. No symbolic
+links will create cycles in the directories.
+
+You can use a unique identifier like in Mac or NTFS to check if you have been to a directory or not. By doing this, you can also avoid infinite loop, but it needs support from the file system.
