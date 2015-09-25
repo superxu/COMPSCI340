@@ -9,16 +9,15 @@ import hashlib
 import json
 import time
 import datetime
+import shutil
 
 
 def check_dir(dirname):
     # python3 -O a2.py dir1 dir2, __debug__ will be false.
     if not os.path.exists(dirname): 
-        #print(dirname + " does not exist.")
         return False
     else:
         if not os.path.isdir(dirname):
-            #print(dirname + " is not a directory.")
             return False
 
     return True
@@ -28,7 +27,6 @@ def check_dir(dirname):
 
 def check_syncfile_in_dir(dirname):
     if not os.path.exists(dirname + "/" + ".sync"): 
-        #print(dirname + "/" + ".sync file does not exist.")
         return False
 
     return True
@@ -37,7 +35,6 @@ def check_syncfile_in_dir(dirname):
 
 
 def compare_digest(value1, value2):
-    #print(value1 == value2)
     if value1 == value2:
         return True
 
@@ -50,8 +47,6 @@ def same_mtimes(t1, t2):
 
 
 def compare_mtime(t1, t2):
-    #print("compare_mtime")
-    #print("t1 = %s t2 = %s" % (t1, t2))
     return (t1 > t2)
 
 
@@ -62,7 +57,6 @@ def check_file_deleted(old, new):
     for key in old.keys():
         if not (key in new.keys()):
             if not (old[key][0][1] == "deleted"):
-                #print("Filename: %s is deleted." % key)
                 # build deleted information
                 delete_info = []
                 # you do not know when the file is deleted, so just use current time.
@@ -102,7 +96,6 @@ def write_sha256_tofile(dirname, new_values):
 
     # get history values first
     old_values = get_syncfile_content(dirname)
-    #print("old_values = %s" % old_values)
 
     if (os.stat(syncfile).st_size == 0) or (is_empty(old_values)):
         fd_write_first =  open(syncfile, "w")
@@ -118,14 +111,10 @@ def write_sha256_tofile(dirname, new_values):
                 if (os.path.isfile(dirname + "/" + newfilelist[i])):
                     if not (newfilelist[i] in old_values.keys()):
                         # new file added
-                        #print("Not exists!")
                         old_values[newfilelist[i]] = new_values[newfilelist[i]]
                     else:
-                        #print("Already exists!")
                         # compare digest 
                         if not compare_digest(old_values[newfilelist[i]][0][1], new_values[newfilelist[i]][0][1]):
-                            #print("new digest = %s" % new_values[newfilelist[i]][0][1])
-                            #print("old digest = %s" % old_values[newfilelist[i]][0][1])
 
                             old_values[newfilelist[i]].extend(new_values[newfilelist[i]]) 
                             # it seems nothing wrong with reverse or sort. even I comment reverse() below, the position/order of keys may still change
@@ -148,7 +137,6 @@ def update_syncfile(dirname, key,  new_value):
 
     # get history values first
     origin_values = get_syncfile_content(dirname)
-    #print("origin_values = %s" % origin_values)
 
 
     if not (key in origin_values.keys()):
@@ -176,10 +164,33 @@ def gen_file_sha256(filename):
     return SHA256_VALUE
 
 
+# if a subdirectory does not exist in another directory, sync/copy it.
+def check_and_sync_dir():
+
+    filelist1 = os.listdir(directory1)
+    filelist2 = os.listdir(directory2)
+
+    for i in range(0, len(filelist1)):
+        subdirname = directory1 + "/" + filelist1[i]
+        if (os.path.isdir(subdirname)):
+            if filelist1[i] not in filelist2:
+                src = directory1 + "/" + filelist1[i]
+                dst = directory2 + "/" + filelist1[i]
+                shutil.copytree(src, dst)
+
+
+    for i in range(0, len(filelist2)):
+        subdirname = directory2 + "/" + filelist2[i]
+        if (os.path.isdir(subdirname)):
+            if filelist2[i] not in filelist1:
+                src = directory2 + "/" + filelist2[i]
+                dst = directory1 + "/" + filelist2[i]
+                shutil.copytree(src, dst)
+
+
 
 def gen_dir_sha256(dirname):
     filelist = os.listdir(dirname)
-    #print("filelist = %s" % filelist)
 
     if len(filelist) == 0:
         return
@@ -196,16 +207,13 @@ def gen_dir_sha256(dirname):
             else:  
                 last_modified = time.strftime("%Y-%m-%d %H:%M:%S %z", time.localtime(os.path.getmtime(dirname + "/"+ filelist[i])))
 
-                #print(last_modified)
                 valuelist = []
                 valuelist.append(last_modified)
                 valuelist.append(gen_file_sha256(dirname + "/"+ filelist[i]))
 
-              #  sha256_values[filelist[i]] = valuelist
                 sha256_values.setdefault(filelist[i], []).append(valuelist)
              
 
-         # How to deal with this?
         elif (os.path.isdir(dirname + "/" + filelist[i])):
             subdir = dirname + "/" + filelist[i]
             #print("sub directory name: %s" % subdir)
@@ -216,7 +224,6 @@ def gen_dir_sha256(dirname):
             pass
 
     # write SHA256 value to .sync file
-    #print("sha256_values = %s" % sha256_values)
     write_sha256_tofile(dirname, sha256_values)
 
 
@@ -224,7 +231,7 @@ def gen_dir_sha256(dirname):
 
 
 def create_syncfile_in_subdirectories():
-    for dirname, dirnames, filenames in os.walk('.'):
+    for dirname, dirnames, filenames in os.walk("."):
         # print path to all subdirectories first.
         for subdirname in dirnames:
             subdir = os.path.join(dirname, subdirname)
@@ -259,28 +266,23 @@ def compare_syncfile_impl(dir1, dir2, file_a, file_b):
         file1 = dir1 + "/" + key
         file2 = dir2 + "/" + key
         if  key in file_b.keys():
-            #print("digest1 = %s" % file_a[key][0][1])
-            #print("digest2 = %s" % file_b[key][0][1])
+
             digest1 = file_a[key][0][1]
             digest2 = file_b[key][0][1]
             mtime1  = file_a[key][0][0]
             mtime2  = file_b[key][0][0]
 
             if compare_digest(digest1, digest2):
-                #print("!!!!! Time1: %s !!!!!!" % (file_a[key][0][0] == file_b[key][0][0]))
                 if not same_mtimes(mtime1, mtime2):
                     if not compare_mtime(mtime1, mtime2):
-                        # change mtime to the earlier mtime, how to change a file's modification time?
                         stinfo = os.stat(file1)
                         os.utime(file2, (stinfo.st_atime, stinfo.st_mtime))
                         # update sync file entry
-                        #print("add new key value: modification time = %s" % file_a[key][0][1])
                         update_syncfile(dir2, key, file_a[key][0])
 
 
             # file content is different
             else:
-                #print("!!!!!! Time2: %s !!!!!!" % (file_a[key][0][0] == file_b[key][0][0]))
                 if (digest1 == "deleted") or (digest2 == "deleted"):
                     if digest1 == "deleted":
                         found_early_digest = False  
@@ -309,7 +311,6 @@ def compare_syncfile_impl(dir1, dir2, file_a, file_b):
                             stinfo = os.stat(file2)
                             os.utime(file1, (stinfo.st_atime, stinfo.st_mtime))
                             # update sync file entry
-                            #print("add new key value = %s" % file_b[key][0])
                             update_syncfile(dir1, key, file_b[key][0])
 
                     # different content, same mtime
@@ -338,12 +339,10 @@ def compare_syncfile_impl(dir1, dir2, file_a, file_b):
 
 
 
+def compare_syncfile_subdir(dir1, dir2):
 
-def compare_syncfile(dir1, dir2):
     syncfile1 = get_syncfile_content(dir1)
     syncfile2 = get_syncfile_content(dir2)
-    #print("syncfile1 = %s" % syncfile1)
-    #print("syncfile2 = %s" % syncfile2)
 
     compare_syncfile_impl(dir1, dir2, syncfile1, syncfile2)
 
@@ -353,10 +352,50 @@ def compare_syncfile(dir1, dir2):
 
     compare_syncfile_impl(dir2, dir1, syncfile2, syncfile1)
 
+    
+    dir1_pathlist = []
+    dir2_pathlist = []
+
+
+    for dirname, dirnames, filenames in os.walk(dir1):
+        # print path to all subdirectories first.
+        for subdirname in dirnames:
+            subdir = os.path.join(dirname, subdirname)
+            dir1_pathlist.append(subdir)
+ 
+
+    for dirname, dirnames, filenames in os.walk(dir2):
+        # print path to all subdirectories first.
+        for subdirname in dirnames:
+            subdir = os.path.join(dirname, subdirname)
+            dir2_pathlist.append(subdir)
+
+    
+    for i in range(0, len(dir1_pathlist)): 
+        dir1 = dir1_pathlist[i]
+        dir2 = dir2_pathlist[i]
+
+        syncfile1 = get_syncfile_content(dir1)
+        syncfile2 = get_syncfile_content(dir2)
+
+        compare_syncfile_impl(dir1, dir2, syncfile1, syncfile2)
+
+
+    for i in range(0, len(dir2_pathlist)): 
+        dir1 = dir1_pathlist[i]
+        dir2 = dir2_pathlist[i]
+        
+        syncfile1 = get_syncfile_content(dir1)
+        syncfile2 = get_syncfile_content(dir2)
+
+        compare_syncfile_impl(dir2, dir1, syncfile2, syncfile1)
+
 
 
 
 def main():
+
+    global directory1, directory2
 
     # check number of arguments
     if (len(sys.argv) < 3):
@@ -375,6 +414,9 @@ def main():
         os.makedirs(sys.argv[2], exist_ok = True)
     
 
+    directory1 = sys.argv[1]
+    directory2 = sys.argv[2]
+
     # check if .sync file exists
     if not check_syncfile_in_dir(sys.argv[1]):
         # create .sync files
@@ -392,7 +434,10 @@ def main():
     gen_dir_sha256(sys.argv[2])
 
 
-    compare_syncfile(sys.argv[1], sys.argv[2])
+    check_and_sync_dir()
+
+
+    compare_syncfile_subdir(sys.argv[1], sys.argv[2])
     
 
 
