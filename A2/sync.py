@@ -165,26 +165,26 @@ def gen_file_sha256(filename):
 
 
 # if a subdirectory does not exist in another directory, sync/copy it.
-def check_and_sync_dir():
+def check_and_sync_dir(dir1, dir2):
 
-    filelist1 = os.listdir(directory1)
-    filelist2 = os.listdir(directory2)
+    filelist1 = os.listdir(dir1)
+    filelist2 = os.listdir(dir2)
 
     for i in range(0, len(filelist1)):
-        subdirname = directory1 + "/" + filelist1[i]
+        subdirname = dir1 + "/" + filelist1[i]
         if (os.path.isdir(subdirname)):
             if filelist1[i] not in filelist2:
-                src = directory1 + "/" + filelist1[i]
-                dst = directory2 + "/" + filelist1[i]
+                src = dir1 + "/" + filelist1[i]
+                dst = dir2 + "/" + filelist1[i]
                 shutil.copytree(src, dst)
 
 
     for i in range(0, len(filelist2)):
-        subdirname = directory2 + "/" + filelist2[i]
+        subdirname = dir2 + "/" + filelist2[i]
         if (os.path.isdir(subdirname)):
             if filelist2[i] not in filelist1:
-                src = directory2 + "/" + filelist2[i]
-                dst = directory1 + "/" + filelist2[i]
+                src = dir2 + "/" + filelist2[i]
+                dst = dir1 + "/" + filelist2[i]
                 shutil.copytree(src, dst)
 
 
@@ -251,7 +251,8 @@ def create_syncfile_in_subdirectories():
 def create_syncfiles(dirname):
     pre_position = os.popen("pwd").read().rstrip('\n')
     os.chdir(dirname)
-    os.system("touch .sync")
+    if not check_syncfile_in_dir(sys.argv[1]):
+    	os.system("touch .sync")
     os.chdir(pre_position)
     # check if there are sub directories.
     create_syncfile_in_subdirectories()
@@ -352,7 +353,6 @@ def compare_syncfile_subdir(dir1, dir2):
 
     compare_syncfile_impl(dir2, dir1, syncfile2, syncfile1)
 
-    
     dir1_pathlist = []
     dir2_pathlist = []
 
@@ -361,16 +361,20 @@ def compare_syncfile_subdir(dir1, dir2):
         # print path to all subdirectories first.
         for subdirname in dirnames:
             subdir = os.path.join(dirname, subdirname)
-            dir1_pathlist.append(subdir)
+            if (os.path.isdir(subdir)):
+                dir1_pathlist.append(subdir)
  
 
     for dirname, dirnames, filenames in os.walk(dir2):
         # print path to all subdirectories first.
         for subdirname in dirnames:
             subdir = os.path.join(dirname, subdirname)
-            dir2_pathlist.append(subdir)
+            if (os.path.isdir(subdir)): 
+                dir2_pathlist.append(subdir)
 
-    
+    dir1_pathlist.sort()
+    dir2_pathlist.sort()
+
     for i in range(0, len(dir1_pathlist)): 
         dir1 = dir1_pathlist[i]
         dir2 = dir2_pathlist[i]
@@ -380,22 +384,17 @@ def compare_syncfile_subdir(dir1, dir2):
 
         compare_syncfile_impl(dir1, dir2, syncfile1, syncfile2)
 
-
     for i in range(0, len(dir2_pathlist)): 
         dir1 = dir1_pathlist[i]
-        dir2 = dir2_pathlist[i]
-        
+        dir2 = dir2_pathlist[i]  
+
         syncfile1 = get_syncfile_content(dir1)
         syncfile2 = get_syncfile_content(dir2)
 
         compare_syncfile_impl(dir2, dir1, syncfile2, syncfile1)
 
 
-
-
 def main():
-
-    global directory1, directory2
 
     # check number of arguments
     if (len(sys.argv) < 3):
@@ -414,27 +413,17 @@ def main():
         os.makedirs(sys.argv[2], exist_ok = True)
     
 
-    directory1 = sys.argv[1]
-    directory2 = sys.argv[2]
+    check_and_sync_dir(sys.argv[1], sys.argv[2])
 
-    # check if .sync file exists
-    if not check_syncfile_in_dir(sys.argv[1]):
-        # create .sync files
-        create_syncfiles(sys.argv[1])
-   
+
+    create_syncfiles(sys.argv[1])
     # generate SHA256 of files in the directory
     gen_dir_sha256(sys.argv[1])
 
 
-    if not check_syncfile_in_dir(sys.argv[2]):
-        # create .sync files
-        create_syncfiles(sys.argv[2])
-    
+    create_syncfiles(sys.argv[2])
     # generate SHA256 of files in the directory
     gen_dir_sha256(sys.argv[2])
-
-
-    check_and_sync_dir()
 
 
     compare_syncfile_subdir(sys.argv[1], sys.argv[2])
