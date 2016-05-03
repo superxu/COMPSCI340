@@ -22,5 +22,5 @@ In this case, the average waiting time is:
 
 
 Q2. Because a real system has clock interrupt, system call, external interrupt, an operating system can decide during these points
-to kill/terminate a process. However, a Python tread implementation does not have these things, it means that it does not know when 
+to kill/terminate a process. However, a Python thread implementation does not have these things, it means that it does not know when 
 is the proper time to kill/terminate a process safely. So we need to add these code to check the process' state.
